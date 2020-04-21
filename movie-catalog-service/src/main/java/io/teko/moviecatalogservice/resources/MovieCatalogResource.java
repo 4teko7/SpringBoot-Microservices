@@ -36,9 +36,6 @@ public class MovieCatalogResource {
 		
 //		RestTemplate restTemplate = new RestTemplate();
 		
-		
-		
-		
 		UserRating userRatings = restTemplate.getForObject("http://localhost:8083/ratingsdata/users/" + userId, UserRating.class);
 		
 		return userRatings.getUserRating().stream().map(rating -> {
