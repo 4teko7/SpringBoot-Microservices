@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 
 import io.teko.moviecatalogservice.models.CatalogItem;
 import io.teko.moviecatalogservice.models.Movie;
@@ -29,6 +31,9 @@ public class MovieCatalogResource {
 	private RestTemplate restTemplate;
 	
 	@Autowired
+	private DiscoveryClient discoveryClient;
+	
+	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
 	@RequestMapping("/{userId}")
@@ -36,10 +41,10 @@ public class MovieCatalogResource {
 		
 //		RestTemplate restTemplate = new RestTemplate();
 		
-		UserRating userRatings = restTemplate.getForObject("http://localhost:8083/ratingsdata/users/" + userId, UserRating.class);
+		UserRating userRatings = restTemplate.getForObject("http://ratingsdataservice/ratingsdata/users/" + userId, UserRating.class);
 		
 		return userRatings.getUserRating().stream().map(rating -> {
-			Movie movie = restTemplate.getForObject("http://localhost:8082/movies/" + rating.getMovieId(),Movie.class);
+			Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
 			return new CatalogItem(movie.getName(),"Kara Şovalye Batman",rating.getRating());
 			
 		}).collect(Collectors.toList());
