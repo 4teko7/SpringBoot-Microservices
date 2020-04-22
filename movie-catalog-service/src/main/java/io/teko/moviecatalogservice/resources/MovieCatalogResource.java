@@ -23,6 +23,8 @@ import io.teko.moviecatalogservice.models.CatalogItem;
 import io.teko.moviecatalogservice.models.Movie;
 import io.teko.moviecatalogservice.models.Rating;
 import io.teko.moviecatalogservice.models.UserRating;
+import io.teko.moviecatalogservice.services.MovieInfo;
+import io.teko.moviecatalogservice.services.UserRatingInfo;
 
 import java.util.Arrays;
 
@@ -40,46 +42,28 @@ public class MovieCatalogResource {
 	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
+	
+	@Autowired
+	private MovieInfo movieInfo;
+	
+	@Autowired
+	private UserRatingInfo userRatingInfo;
+	
 //	@HystrixCommand(fallbackMethod = "getFallbackCatalog")
 	@RequestMapping("/{userId}")
 	public List<CatalogItem> getCatalog(@PathVariable("userId") String userId){
 		
-		UserRating userRatings = getUserRating(userId);
-		try{return userRatings.getUserRatings().get(userId).stream().map(rating -> getCatalogItem(rating) ).collect(Collectors.toList());}
-		catch(Exception e) {return Arrays.asList(getFallbackCatalogItem(new Rating()));}
+		UserRating userRatings = userRatingInfo.getUserRating(userId);
+		try{return userRatings.getUserRatings().get(userId).stream().map(rating -> movieInfo.getCatalogItem(rating) ).collect(Collectors.toList());}
+		catch(Exception e) {return Arrays.asList(movieInfo.getFallbackCatalogItem(new Rating()));}
 		
 
 	}
 	
 
-	@HystrixCommand(fallbackMethod = "getFallbackUserRating")
-	private UserRating getUserRating(@PathVariable("userId") String userId) {
-		
-		return restTemplate.getForObject("http://ratingsdataservice/ratingsdata/users/" + userId, UserRating.class);
-	}
-	
-	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
-	private CatalogItem getCatalogItem(Rating rating) {
-		Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
-		
-		return new CatalogItem(movie.getName(),movie.getDescription(),rating.getRating());
-	}
 	
 	
-	// FallBackMethodForUserRating
-	private UserRating getFallbackUserRating(@PathVariable("userId") String userId) {
-		UserRating userRating = new UserRating();
-		userRating.setUserId(userId);
-		HashMap<String,List<Rating>> hashMap = new HashMap<String,List<Rating>>();
-		hashMap.put("1",Arrays.asList(new Rating("0",0)));
-		userRating.setUserRatings(hashMap);
-		return userRating;
-	}
 	
-	// FallBackMethodForCatalogItem
-	private CatalogItem getFallbackCatalogItem(Rating rating) {
-		return new CatalogItem("Movie Names Was not Found","No Description",0);
-	}
 		
 }
 
