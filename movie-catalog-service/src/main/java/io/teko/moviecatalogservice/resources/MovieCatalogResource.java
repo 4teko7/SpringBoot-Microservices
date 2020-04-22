@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 
 import io.teko.moviecatalogservice.models.CatalogItem;
@@ -36,6 +39,7 @@ public class MovieCatalogResource {
 	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
+	@HystrixCommand(fallbackMethod = "getFallbackCatalog")
 	@RequestMapping("/{userId}")
 	public List<CatalogItem> getCatalog(@PathVariable("userId") String userId){
 		
@@ -46,11 +50,17 @@ public class MovieCatalogResource {
 		return userRatings.getUserRating().stream().map(rating -> {
 			Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
 			return new CatalogItem(movie.getName(),"Kara Şovalye Batman",rating.getRating());
-			
+//			return catalogItem;
 		}).collect(Collectors.toList());
 		
 
 	}
+	
+	// Fallback Method is executed when one of microservice is down.
+	public List<CatalogItem> getFallbackCatalog(@PathVariable("userId") String userId){
+		return Arrays.asList(new CatalogItem("No Movie","",0));
+	}
+		
 }
 
 
