@@ -3,6 +3,7 @@ package io.teko.moviecatalogservice.resources;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,26 +40,45 @@ public class MovieCatalogResource {
 	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
-	@HystrixCommand(fallbackMethod = "getFallbackCatalog")
+//	@HystrixCommand(fallbackMethod = "getFallbackCatalog")
 	@RequestMapping("/{userId}")
 	public List<CatalogItem> getCatalog(@PathVariable("userId") String userId){
 		
-//		RestTemplate restTemplate = new RestTemplate();
-		
-		UserRating userRatings = restTemplate.getForObject("http://ratingsdataservice/ratingsdata/users/" + userId, UserRating.class);
-		
-		return userRatings.getUserRating().stream().map(rating -> {
-			Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
-			return new CatalogItem(movie.getName(),"Kara Şovalye Batman",rating.getRating());
-//			return catalogItem;
-		}).collect(Collectors.toList());
+		UserRating userRatings = getUserRating(userId);
+		try{return userRatings.getUserRatings().get(userId).stream().map(rating -> getCatalogItem(rating) ).collect(Collectors.toList());}
+		catch(Exception e) {return Arrays.asList(getFallbackCatalogItem(new Rating()));}
 		
 
 	}
 	
-	// Fallback Method is executed when one of microservice is down.
-	public List<CatalogItem> getFallbackCatalog(@PathVariable("userId") String userId){
-		return Arrays.asList(new CatalogItem("No Movie","",0));
+
+	@HystrixCommand(fallbackMethod = "getFallbackUserRating")
+	private UserRating getUserRating(@PathVariable("userId") String userId) {
+		
+		return restTemplate.getForObject("http://ratingsdataservice/ratingsdata/users/" + userId, UserRating.class);
+	}
+	
+	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
+	private CatalogItem getCatalogItem(Rating rating) {
+		Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
+		
+		return new CatalogItem(movie.getName(),movie.getDescription(),rating.getRating());
+	}
+	
+	
+	// FallBackMethodForUserRating
+	private UserRating getFallbackUserRating(@PathVariable("userId") String userId) {
+		UserRating userRating = new UserRating();
+		userRating.setUserId(userId);
+		HashMap<String,List<Rating>> hashMap = new HashMap<String,List<Rating>>();
+		hashMap.put("1",Arrays.asList(new Rating("0",0)));
+		userRating.setUserRatings(hashMap);
+		return userRating;
+	}
+	
+	// FallBackMethodForCatalogItem
+	private CatalogItem getFallbackCatalogItem(Rating rating) {
+		return new CatalogItem("Movie Names Was not Found","No Description",0);
 	}
 		
 }

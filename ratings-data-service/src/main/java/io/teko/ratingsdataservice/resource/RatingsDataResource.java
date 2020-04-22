@@ -13,7 +13,9 @@ import io.teko.ratingsdataservice.models.UserRating;
 @RestController
 @RequestMapping("/ratingsdata")
 public class RatingsDataResource {
-
+	
+	UserRating userRating = new UserRating();
+	
 	@RequestMapping("/{movieId}")
 	public Rating getRating(@PathVariable("movieId") String movieId) {
 		return new Rating(movieId,4);
@@ -22,13 +24,7 @@ public class RatingsDataResource {
 	
 	@RequestMapping("users/{userId}")
 	public UserRating getUserRating(@PathVariable("userId") String userId) {
-		List<Rating> ratings = Arrays.asList(
-				new Rating("1",4),
-				new Rating("2",3),
-				new Rating("3",3)
-		);
-		UserRating userRating = new UserRating();
-		userRating.setUserRating(ratings);
+		userRating.setUserId(userId);
 		return userRating;
 	}
 	
