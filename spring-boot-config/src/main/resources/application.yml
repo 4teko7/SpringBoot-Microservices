@@ -1,0 +1,15 @@
+spring:
+    application:
+        name : ConfigServer
+db:
+    connection : "{connectionString: 'http://....',userName:'teko',password:'pass'}"
+    host : 127.0.0.1
+    port : 8088
+server:
+    port : 8088
+
+#This expose everything. in production this shouldnt be written.
+management.endpoints.web.exposure.include : "*" 
+
+# This will set the new profile as applications-microservices.yml
+spring.profiles.active : microservices

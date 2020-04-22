@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RestTemplate;
@@ -20,6 +21,9 @@ public class UserRatingInfo {
 	@Autowired
 	private RestTemplate restTemplate;
 	
+	@Value("${userRatingUrl}")
+	private String userRatingUrl;
+	
 	@HystrixCommand(fallbackMethod = "getFallbackUserRating",
 			threadPoolKey = "movieInfoPool",
 			threadPoolProperties = {
@@ -33,9 +37,10 @@ public class UserRatingInfo {
 					@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),
 			
 			})
+	
 	public UserRating getUserRating(@PathVariable("userId") String userId) {
 		
-		return restTemplate.getForObject("http://ratingsdataservice/ratingsdata/users/" + userId, UserRating.class);
+		return restTemplate.getForObject(userRatingUrl + userId, UserRating.class);
 	}
 	
 	

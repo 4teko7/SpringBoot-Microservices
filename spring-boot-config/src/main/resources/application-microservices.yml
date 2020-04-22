@@ -1,0 +1,12 @@
+spring:
+    application:
+        name : ConfigServer
+db:
+    connection : "{connectionString: 'http://....',userName:'teko',password:'pass'}"
+    host : 127.0.0.1
+    port : 8088
+server:
+    port : 8089
+
+#This expose everything. in production this shouldnt be written.
+management.endpoints.web.exposure.include : "*" 

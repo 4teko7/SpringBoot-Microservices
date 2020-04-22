@@ -1,6 +1,7 @@
 package io.teko.moviecatalogservice.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -16,6 +17,10 @@ public class MovieInfo {
 	
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Value("${movieInfoUrl}")
+	private String movieInfoUrl;
+	
 
 	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem",
 			threadPoolKey = "movieInfoPool",
@@ -32,7 +37,7 @@ public class MovieInfo {
 			}
 			)
 	public CatalogItem getCatalogItem(Rating rating) {
-		Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
+		Movie movie = restTemplate.getForObject(movieInfoUrl + rating.getMovieId(),Movie.class);
 		
 		return new CatalogItem(movie.getName(),movie.getDescription(),rating.getRating());
 	}
