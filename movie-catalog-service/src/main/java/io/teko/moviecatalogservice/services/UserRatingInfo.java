@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RestTemplate;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 
 import io.teko.moviecatalogservice.models.Rating;
 import io.teko.moviecatalogservice.models.UserRating;
@@ -19,7 +20,19 @@ public class UserRatingInfo {
 	@Autowired
 	private RestTemplate restTemplate;
 	
-	@HystrixCommand(fallbackMethod = "getFallbackUserRating")
+	@HystrixCommand(fallbackMethod = "getFallbackUserRating",
+			threadPoolKey = "movieInfoPool",
+			threadPoolProperties = {
+					@HystrixProperty(name = "coreSize",value = "20"),
+					@HystrixProperty(name = "maxQueueSize", value = "10"),
+			},
+			commandProperties = {
+					@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
+					@HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
+					@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
+					@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),
+			
+			})
 	public UserRating getUserRating(@PathVariable("userId") String userId) {
 		
 		return restTemplate.getForObject("http://ratingsdataservice/ratingsdata/users/" + userId, UserRating.class);

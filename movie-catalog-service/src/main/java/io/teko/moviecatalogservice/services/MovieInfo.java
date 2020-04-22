@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 
 import io.teko.moviecatalogservice.models.CatalogItem;
 import io.teko.moviecatalogservice.models.Movie;
@@ -16,7 +17,20 @@ public class MovieInfo {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
+	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem",
+			threadPoolKey = "movieInfoPool",
+			threadPoolProperties = {
+					@HystrixProperty(name = "coreSize",value = "20"),
+					@HystrixProperty(name = "maxQueueSize", value = "10"),
+			},
+			commandProperties = {
+					@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
+					@HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
+					@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
+					@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),
+			
+			}
+			)
 	public CatalogItem getCatalogItem(Rating rating) {
 		Movie movie = restTemplate.getForObject("http://movieinfoservis/movies/" + rating.getMovieId(),Movie.class);
 		
