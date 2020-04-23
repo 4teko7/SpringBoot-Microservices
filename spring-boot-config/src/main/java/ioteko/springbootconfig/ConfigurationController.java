@@ -1,6 +1,7 @@
 package ioteko.springbootconfig;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,7 +13,10 @@ public class ConfigurationController {
 	@Autowired
 	private DBSettings dbSettings;
 	
+	@Value("${hello}")
+	private String hello;
 	
-	@GetMapping("/helloWord")
-	public String helloWord() {return dbSettings.getConnection() + dbSettings.getHost() + dbSettings.getPort();}
+	
+	@GetMapping("/helloWorld")
+	public String helloWord() {return hello + " : " + dbSettings.getConnection() + dbSettings.getHost() + dbSettings.getPort();}
 }
