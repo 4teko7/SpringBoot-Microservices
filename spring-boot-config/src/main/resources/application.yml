@@ -10,3 +10,6 @@ management.endpoints.web.exposure.include : "*"
 
 spring.cloud.config.uri : http://localhost:8888
 
+#This will pull the configuration file from spring cloud with the same name of this application name
+spring.application.name : spring-boot-config
+
